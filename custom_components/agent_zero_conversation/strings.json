@@ -1,0 +1,27 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "ha-agent-zero-conversation-agent",
+        "description": "Connect Home Assistant Assist to Agent Zero. Setup checks /api/health only; the API key is used when messages are sent.",
+        "data": {
+          "name": "Name",
+          "base_url": "Agent Zero base URL",
+          "api_key": "Agent Zero API key",
+          "timeout": "Request timeout in seconds",
+          "lifetime_hours": "Agent Zero chat lifetime in hours",
+          "project_name": "Agent Zero project name",
+          "agent_profile": "Agent Zero agent profile"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to Agent Zero.",
+      "invalid_url": "URL must start with http:// or https://.",
+      "unknown": "Unexpected error."
+    },
+    "abort": {
+      "already_configured": "This Agent Zero URL is already configured."
+    }
+  }
+}
