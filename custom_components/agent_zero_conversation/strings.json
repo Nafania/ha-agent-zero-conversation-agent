@@ -13,6 +13,19 @@
           "project_name": "Agent Zero project name",
           "agent_profile": "Agent Zero agent profile"
         }
+      },
+      "reconfigure": {
+        "title": "Update Agent Zero connection",
+        "description": "Update the Agent Zero URL or token. Leave API key empty to keep the current token.",
+        "data": {
+          "name": "Name",
+          "base_url": "Agent Zero base URL",
+          "api_key": "New Agent Zero API key",
+          "timeout": "Request timeout in seconds",
+          "lifetime_hours": "Agent Zero chat lifetime in hours",
+          "project_name": "Agent Zero project name",
+          "agent_profile": "Agent Zero agent profile"
+        }
       }
     },
     "error": {
@@ -21,7 +34,8 @@
       "unknown": "Unexpected error."
     },
     "abort": {
-      "already_configured": "This Agent Zero URL is already configured."
+      "already_configured": "This Agent Zero URL is already configured.",
+      "reconfigure_successful": "Agent Zero connection updated."
     }
   }
 }

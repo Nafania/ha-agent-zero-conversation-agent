@@ -45,17 +45,26 @@ def _strip_optional_string(value: Any) -> str | None:
     return stripped or None
 
 
-def _clean_user_input(user_input: dict[str, Any]) -> dict[str, Any]:
+def _clean_user_input(
+    user_input: dict[str, Any],
+    existing_data: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     """Normalize config flow user input before storing it."""
-    data = dict(user_input)
+    existing_data = existing_data or {}
+    data = {**existing_data, **user_input}
     data[CONF_NAME] = data[CONF_NAME].strip() or DEFAULT_NAME
     data[CONF_BASE_URL] = data[CONF_BASE_URL].strip().rstrip("/")
-    data[CONF_API_KEY] = data[CONF_API_KEY].strip()
+
+    api_key = user_input.get(CONF_API_KEY, "").strip()
+    if api_key:
+        data[CONF_API_KEY] = api_key
+    else:
+        data[CONF_API_KEY] = existing_data.get(CONF_API_KEY, "")
 
     for key in (CONF_PROJECT_NAME, CONF_AGENT_PROFILE):
         value = _strip_optional_string(data.get(key))
         if value is None:
-            data.pop(key, None)
+            data[key] = None
         else:
             data[key] = value
 
@@ -80,9 +89,18 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
         raise CannotConnect from err
 
 
-def _user_schema(user_input: dict[str, Any] | None = None) -> vol.Schema:
+def _user_schema(
+    user_input: dict[str, Any] | None = None,
+    *,
+    allow_blank_api_key: bool = False,
+) -> vol.Schema:
     """Return config flow schema with suggested values."""
     user_input = user_input or {}
+    api_key_field = (
+        vol.Optional(CONF_API_KEY, default="")
+        if allow_blank_api_key
+        else vol.Required(CONF_API_KEY)
+    )
     return vol.Schema(
         {
             vol.Required(
@@ -93,7 +111,7 @@ def _user_schema(user_input: dict[str, Any] | None = None) -> vol.Schema:
                 CONF_BASE_URL,
                 default=user_input.get(CONF_BASE_URL, ""),
             ): str,
-            vol.Required(CONF_API_KEY): str,
+            api_key_field: str,
             vol.Optional(
                 CONF_TIMEOUT,
                 default=user_input.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
@@ -123,6 +141,46 @@ class AgentZeroConversationConfigFlow(
     """Handle a config flow for ha-agent-zero-conversation-agent."""
 
     VERSION = 1
+
+    async def async_step_reconfigure(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ):
+        """Handle user-triggered reconfiguration."""
+        entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+        suggested_input = dict(entry.data)
+
+        if user_input is not None:
+            data = _clean_user_input(user_input, dict(entry.data))
+            try:
+                await validate_input(self.hass, data)
+            except InvalidURL:
+                errors["base"] = "invalid_url"
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except Exception:  # noqa: BLE001
+                _LOGGER.exception("Unexpected Agent Zero reconfigure error")
+                errors["base"] = "unknown"
+            else:
+                return self.async_update_reload_and_abort(
+                    entry,
+                    unique_id=data[CONF_BASE_URL],
+                    title=data[CONF_NAME],
+                    data=data,
+                )
+
+            suggested_input |= user_input
+
+        suggested_input[CONF_API_KEY] = ""
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=_user_schema(
+                suggested_input,
+                allow_blank_api_key=True,
+            ),
+            errors=errors,
+        )
 
     async def async_step_user(
         self,

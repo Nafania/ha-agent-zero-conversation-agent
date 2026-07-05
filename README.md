@@ -50,6 +50,13 @@ Assistant.
 8. Enable **Prefer handling commands locally**.
 9. Keep your existing microphone/STT/TTS settings.
 
+## Update URL or Token
+
+Open **Settings -> Devices & services -> ha-agent-zero-conversation-agent**,
+select the existing entry menu, then choose **Reconfigure**. Enter the new Agent
+Zero base URL and paste a new API key. Leave API key empty if only the URL
+changed.
+
 ## Agent Zero API Key
 
 Agent Zero exposes `POST /api/api_message` for external applications. The token
