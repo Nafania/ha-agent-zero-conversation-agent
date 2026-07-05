@@ -32,6 +32,10 @@ domains are Python package names and cannot use hyphens.
 Add this repository to HACS as an **Integration**, install it, then restart Home
 Assistant.
 
+The integration ships Home Assistant brand assets in
+`custom_components/agent_zero_conversation/brand/`, as required by HACS and
+Home Assistant 2026.3+.
+
 ## Configure
 
 1. Open **Settings -> Devices & services**.
